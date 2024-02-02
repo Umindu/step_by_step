@@ -163,9 +163,7 @@ class _HomeState extends State<Home> {
                                       builder: (context) =>
                                           ShowExperimentDetails(
                                             id: listFilms[index]['id'],
-                                            title: listFilms[index]['title'],
-                                            description: listFilms[index]
-                                                ['description'],
+                                            title: listFilms[index]['title']
                                           )));
                                 },
                               ),
