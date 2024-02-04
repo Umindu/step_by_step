@@ -36,7 +36,7 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
 
     List<Map> imge = await sqLdb
         .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id}");
-print(imge);
+    print(imge);
     if (imge[0]['image'] != null) {
       setState(() {
         base64String = imge[0]['image'];
@@ -70,6 +70,7 @@ print(imge);
                         .format(DateTime.parse(date!)),
               ),
               TextField(
+                readOnly: true,
                 controller: _title,
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -78,6 +79,7 @@ print(imge);
                 ),
               ),
               TextField(
+                readOnly: true,
                 controller: _description,
                 minLines: 1,
                 maxLines: null,

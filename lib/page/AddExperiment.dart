@@ -3,21 +3,39 @@ import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/Home.dart';
 
 class AddExperiment extends StatefulWidget {
-  const AddExperiment({Key? key}) : super(key: key);
+  final id;
+  const AddExperiment({Key? key, this.id}) : super(key: key);
 
   @override
   State<AddExperiment> createState() => _AddExperimentState();
 }
 
 class _AddExperimentState extends State<AddExperiment> {
-  final TextEditingController _title = TextEditingController();
-  final TextEditingController _description = TextEditingController();
+  TextEditingController _title = TextEditingController();
+  TextEditingController _description = TextEditingController();
   SQLdb sqLdb = SQLdb();
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.id != null) {
+      sqLdb
+          .getData("SELECT * FROM experiment WHERE id = ${widget.id}")
+          .then((value) {
+        _title.text = value[0]["title"];
+        _description.text = value[0]["description"];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Experiment"),
+        title: widget.id == null
+            ? const Text("Add Experiment")
+            : const Text("Edit Experiment"),
       ),
       body: Container(
         margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -56,12 +74,24 @@ class _AddExperimentState extends State<AddExperiment> {
             ElevatedButton(
                 onPressed: () async {
                   if (_title.text.isNotEmpty == true) {
-                    int rep = await sqLdb.insertData(
-                        "INSERT INTO 'experiment' (title, description, date) VALUES (\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\")");
-                    if (rep > 0) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (context) => const Home()),
-                          (route) => false);
+                    if (widget.id == null) {
+                      int rep = await sqLdb.insertData(
+                          "INSERT INTO 'experiment' (title, description, date) VALUES (\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\")");
+                      if (rep > 0) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (context) => const Home()),
+                            (route) => false);
+                      }
+                    } else {
+                      int rep = await sqLdb.updateData(
+                          "UPDATE 'experiment' SET title = \"${_title.text}\", description = \"${_description.text}\" WHERE id = ${widget.id}");
+                      if (rep > 0) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (context) => const Home()),
+                            (route) => false);
+                      }
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -69,7 +99,7 @@ class _AddExperimentState extends State<AddExperiment> {
                     ));
                   }
                 },
-                child: const SizedBox(
+                child: widget.id == null ? const SizedBox(
                     height: 50,
                     width: double.infinity,
                     child: Row(
@@ -83,6 +113,24 @@ class _AddExperimentState extends State<AddExperiment> {
                         ),
                         Text(
                           "Add Experiment",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    )):
+                    const SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.update,
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "Update Experiment",
                           style: TextStyle(fontSize: 18),
                         ),
                       ],

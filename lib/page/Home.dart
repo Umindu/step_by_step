@@ -3,7 +3,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/AddExperiment.dart';
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
-import 'package:step_by_step/page/UpdateExperiment.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -27,7 +26,7 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const AddExperiment()));
+              MaterialPageRoute(builder: (context) => const AddExperiment(id: null,)));
         },
         child: const Icon(Icons.add),
       ),
@@ -126,18 +125,10 @@ class _HomeState extends State<Home> {
                                                       Navigator.of(context).push(
                                                           MaterialPageRoute(
                                                               builder: (context) =>
-                                                                  UpdateExperiment(
+                                                                  AddExperiment(
                                                                     id: listFilms[
                                                                             index]
-                                                                        ['id'],
-                                                                    title: listFilms[
-                                                                            index]
-                                                                        [
-                                                                        'title'],
-                                                                    description:
-                                                                        listFilms[index]
-                                                                            [
-                                                                            'description'],
+                                                                        ['id']
                                                                   )));
                                                     },
                                                   ),

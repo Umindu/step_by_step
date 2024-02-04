@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:step_by_step/db/SQLDB.dart';
-import 'package:step_by_step/page/AddStep.dart';
+import 'package:step_by_step/page/AddEditStep.dart';
 import 'package:step_by_step/page/Home.dart';
 import 'package:step_by_step/page/ShowStepDetails.dart';
 
@@ -52,7 +52,7 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                     return Card(
                       child: ListTile(
                         leading:
-                        // circal backgroung text
+                            // circal backgroung text
                             CircleAvatar(
                           radius: 20,
                           child: Text(
@@ -61,7 +61,8 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
-                          ),),
+                          ),
+                        ),
                         title: Text(
                           "${listStep[index]['title']}",
                           style: const TextStyle(
@@ -90,7 +91,18 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                                               Icons.edit,
                                             ),
                                             title: const Text("Edit"),
-                                            onTap: () {},
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          AddEditStep(
+                                                              id_exp: widget.id,
+                                                              title:
+                                                                  widget.title,
+                                                              id_step: listStep[
+                                                                      index]
+                                                                  ['id'])));
+                                            },
                                           ),
                                           ListTile(
                                             leading: const Icon(
@@ -181,8 +193,8 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) =>
-                    AddStep(id_exp: widget.id, title: widget.title)));
+                builder: (context) => AddEditStep(
+                    id_exp: widget.id, title: widget.title, id_step: null)));
           },
           label: const Text('Add Step'),
           icon: const Icon(Icons.add),

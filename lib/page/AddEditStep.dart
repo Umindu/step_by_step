@@ -8,19 +8,20 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:step_by_step/page/Utility.dart';
 
-class AddStep extends StatefulWidget {
+class AddEditStep extends StatefulWidget {
   final id_exp;
   final title;
   final id_step;
 
-  const AddStep({super.key, this.id_exp, this.title, this.id_step});
+  const AddEditStep({super.key, this.id_exp, this.title, this.id_step});
 
   @override
-  State<AddStep> createState() => _AddStepState();
+  State<AddEditStep> createState() => _AddEditStepState();
 }
 
-class _AddStepState extends State<AddStep> {
+class _AddEditStepState extends State<AddEditStep> {
   XFile? _imageFile;
   String? base64String;
 
@@ -95,10 +96,33 @@ class _AddStepState extends State<AddStep> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.id_step != null) {
+      sqLdb
+          .getData("SELECT * FROM 'step' WHERE id = ${widget.id_step}")
+          .then((value) => setState(() {
+                _title.text = value[0]['title'];
+                _description.text = value[0]['description'];
+                _date = DateFormat('EEE, MMM dd yyyy    hh:mm a')
+                    .format(value[0]['date']);
+                _dateDatabase = DateTime.parse(value[0]['date']);
+              }));
+      sqLdb
+          .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id_step}")
+          .then((value) => setState(() {
+                base64String = value[0]['image'];
+              }));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Step"),
+        title: widget.id_step == null
+            ? const Text("Add Step")
+            : const Text("Edit Step"),
         actions: [
           IconButton(
             onPressed: () async {
@@ -116,13 +140,13 @@ class _AddStepState extends State<AddStep> {
                   _date =
                       "${dateFormat.format(pickedDate!)}    ${pickedTime!.format(context)}";
 
-                      _dateDatabase = DateTime(
-                        pickedDate.year,
-                        pickedDate.month,
-                        pickedDate.day,
-                        pickedTime.hour,
-                        pickedTime.minute,
-                      );
+                  _dateDatabase = DateTime(
+                    pickedDate.year,
+                    pickedDate.month,
+                    pickedDate.day,
+                    pickedTime.hour,
+                    pickedTime.minute,
+                  );
                 });
               }
             },
@@ -194,26 +218,42 @@ class _AddStepState extends State<AddStep> {
           TextButton(
             onPressed: () async {
               if (_title.text.isNotEmpty == true) {
-                int rep = await sqLdb.insertData(
-                    "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${_dateDatabase}\")");
+                if (widget.id_step == null) {
+                  int rep = await sqLdb.insertData(
+                      "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${_dateDatabase}\")");
 
-                List<Map> listStep =
-                    await sqLdb.getData("SELECT * FROM 'step'");
-                int idStep = listStep.last['id'];
+                  List<Map> listStep =
+                      await sqLdb.getData("SELECT * FROM 'step'");
+                  int idStep = listStep.last['id'];
 
-                if (base64String != null) {
-                  print(base64String);
-                  await sqLdb.insertData(
-                      "INSERT INTO 'image' (id_step, image) VALUES (${idStep},\"$base64String\")");
-                }
-                if (rep > 0) {
-                  Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                          builder: (context) => ShowExperimentDetails(
-                                id: widget.id_exp,
-                                title: widget.title,
-                              )),
-                      (route) => false);
+                  if (base64String != null) {
+                    print(base64String);
+                    await sqLdb.insertData(
+                        "INSERT INTO 'image' (id_step, image) VALUES (${idStep},\"$base64String\")");
+                  }
+                  if (rep > 0) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => ShowExperimentDetails(
+                                  id: widget.id_exp,
+                                  title: widget.title,
+                                )),
+                        (route) => false);
+                  }
+                }else{
+                  int rep = await sqLdb.updateData("UPDATE 'step' SET title = \"${_title.text}\", description = \"${_description.text}\", date = \"${_dateDatabase}\" WHERE id = ${widget.id_step}");
+                  if (base64String != null) {
+                    await sqLdb.updateData("UPDATE 'image' SET image = \"$base64String\" WHERE id_step = ${widget.id_step}");
+                  }
+                  if (rep > 0) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => ShowExperimentDetails(
+                              id: widget.id_exp,
+                              title: widget.title,
+                            )),
+                            (route) => false);
+                  }
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -255,18 +295,29 @@ class _AddStepState extends State<AddStep> {
               const SizedBox(
                 height: 10,
               ),
-              Container(
-                height: null,
-                width: MediaQuery.of(context).size.width,
-                child: _imageFile != null
-                    ? Image.file(
-                        File(_imageFile!.path),
-                        fit: BoxFit.cover,
-                      )
-                    : const Center(
-                        child: Text("No Image"),
-                      ),
-              ),
+              widget.id_step == null
+                  ? Container(
+                      height: null,
+                      width: MediaQuery.of(context).size.width,
+                      child: _imageFile != null
+                          ? Image.file(
+                              File(_imageFile!.path),
+                              fit: BoxFit.cover,
+                            )
+                          : const Center(
+                              child: Text("No Image"),
+                            ),
+                    )
+                  : Container(
+                      height: null,
+                      width: MediaQuery.of(context).size.width,
+                      child: base64String != null
+                          ? Image.memory(
+                              Utility.dataFromBase64String(base64String!),
+                              fit: BoxFit.cover,
+                            )
+                          : const Text("No Image"),
+                    ),
             ],
           ),
         ),
