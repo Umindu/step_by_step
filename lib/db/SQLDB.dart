@@ -46,6 +46,16 @@ class SQLdb {
       )
      ''');
     print("=====================step created!==================");
+
+    await db.execute('''
+     CREATE TABLE "image" (
+     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+      "id_step" INTEGER NOT NULL,
+      "image" BLOB,
+      FOREIGN KEY (id_step) REFERENCES step(id)
+      )
+     ''');
+    print("=====================image created!==================");
   }
 
   //------------------CRUD-------------------

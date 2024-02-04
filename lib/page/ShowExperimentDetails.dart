@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/AddStep.dart';
 import 'package:step_by_step/page/Home.dart';
+import 'package:step_by_step/page/ShowStepDetails.dart';
 
 class ShowExperimentDetails extends StatefulWidget {
   final id;
@@ -158,7 +159,12 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                               Icons.more_vert,
                               size: 25,
                             )),
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => ShowStepDetails(
+                                    id: listStep[index]['id'],
+                                  )));
+                        },
                       ),
                     );
                   });
