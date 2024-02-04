@@ -25,7 +25,7 @@ class _AddExperimentState extends State<AddExperiment> {
           children: [
             TextField(
               controller: _title,
-              style: const TextStyle(fontSize: 18, color: Colors.purple),
+              style: const TextStyle(fontSize: 18),
               decoration: const InputDecoration(
                 labelText: "Title",
                 enabledBorder: UnderlineInputBorder(
@@ -41,7 +41,7 @@ class _AddExperimentState extends State<AddExperiment> {
             ),
             TextField(
               controller: _description,
-              style: const TextStyle(fontSize: 18, color: Colors.purple),
+              style: const TextStyle(fontSize: 18),
               decoration: const InputDecoration(
                 labelText: "Description",
                 enabledBorder: UnderlineInputBorder(

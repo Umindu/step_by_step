@@ -23,19 +23,23 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
   SQLdb sqLdb = SQLdb();
 
   Future<void> getStep() async {
-    List<Map> step = await sqLdb.getData("SELECT * FROM 'step' WHERE id = ${widget.id}");
+    List<Map> step =
+        await sqLdb.getData("SELECT * FROM 'step' WHERE id = ${widget.id}");
 
-    List<Map> imge = await sqLdb.getData("SELECT * FROM 'image' WHERE id_step = ${widget.id}");
+    setState(() {
+      date = step[0]['date'];
+      title = step[0]['title'];
+      description = step[0]['description'];
+      _title.value = TextEditingValue(text: title!);
+      _description.value = TextEditingValue(text: description!);
+    });
 
-    if (imge.isNotEmpty) {
+    List<Map> imge = await sqLdb
+        .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id}");
+print(imge);
+    if (imge[0]['image'] != null) {
       setState(() {
-        date = step[0]['date'];
-        title = step[0]['title'];
-        description = step[0]['description'];
         base64String = imge[0]['image'];
-
-        _title.value = TextEditingValue(text: title!);
-        _description.value = TextEditingValue(text: description!);
       });
     }
   }
@@ -50,7 +54,7 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title == null ? "" : title!),
+        title: Text(title ?? ""),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -59,8 +63,11 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                //date format 
-                date == null ? "" :  DateFormat('EEE, MMM dd yyyy    hh:mm a').format(DateTime.parse(date!)),
+                //date format
+                date == null
+                    ? ""
+                    : DateFormat('EEE, MMM dd yyyy    hh:mm a')
+                        .format(DateTime.parse(date!)),
               ),
               TextField(
                 controller: _title,
@@ -72,7 +79,6 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
               ),
               TextField(
                 controller: _description,
-                
                 minLines: 1,
                 maxLines: null,
                 decoration: const InputDecoration(
@@ -86,8 +92,11 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
                 height: null,
                 width: MediaQuery.of(context).size.width,
                 child: base64String != null
-                  ? Image.memory(Utility.dataFromBase64String(base64String!), fit: BoxFit.cover,)
-                  : const Text("No Image"),
+                    ? Image.memory(
+                        Utility.dataFromBase64String(base64String!),
+                        fit: BoxFit.cover,
+                      )
+                    : Text("No Image"),
               ),
             ],
           ),
