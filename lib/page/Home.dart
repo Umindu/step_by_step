@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/AddExperiment.dart';
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
@@ -32,6 +33,49 @@ class _HomeState extends State<Home> {
       ),
       appBar: AppBar(
         title: const Text("Home"),
+        actions: [
+          IconButton(onPressed: (){
+            showModalBottomSheet(context: context, builder: (context){
+              return Container(
+                height: 180,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10,),
+                    ListTile(
+                      leading: const Icon(Icons.backup),
+                      title: const Text("Backup"),
+                      onTap: () async {
+                        String db_path = await getDatabasesPath();
+                        print(db_path);
+                        await sqLdb.backupDB();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.restore),
+                      title: const Text("Restore"),
+                      onTap: () async {
+                        await sqLdb.restoreDB();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete),
+                      title: const Text("Delete Database"),
+                      onTap: () async {
+                        await sqLdb.deleteDB();
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  ],
+                ),
+              );
+            });
+             
+
+          }, icon: const Icon(Icons.more_vert))
+
+        ],
       ),
       body: Container(
         margin: const EdgeInsets.all(10),
@@ -109,7 +153,11 @@ class _HomeState extends State<Home> {
                                                               (context) =>
                                                                   AlertDialog(
                                                                     title: Text(
-                                                                        "Are you sure you want to delete? ${listFilms[index]['title']}", style: TextStyle(fontSize: 18),),
+                                                                      "Are you sure you want to delete? ${listFilms[index]['title']}",
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              18),
+                                                                    ),
                                                                     actions: [
                                                                       ElevatedButton(
                                                                           onPressed:
@@ -155,16 +203,16 @@ class _HomeState extends State<Home> {
                                           });
                                     },
                                     icon: const Icon(
-                                      Icons.more_vert,
+                                      Icons.more_horiz,
                                       size: 25,
                                     )),
                                 onTap: () {
                                   Navigator.of(context).push(MaterialPageRoute(
                                       builder: (context) =>
                                           ShowExperimentDetails(
-                                            id: listFilms[index]['id'],
-                                            title: listFilms[index]['title']
-                                          )));
+                                              id: listFilms[index]['id'],
+                                              title: listFilms[index]
+                                                  ['title'])));
                                 },
                               ),
                             );

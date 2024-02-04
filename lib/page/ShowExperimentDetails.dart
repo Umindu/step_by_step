@@ -155,7 +155,7 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                                   });
                             },
                             icon: const Icon(
-                              Icons.more_vert,
+                              Icons.more_horiz,
                               size: 25,
                             )),
                         onTap: () {

@@ -12,8 +12,9 @@ import 'package:image_cropper/image_cropper.dart';
 class AddStep extends StatefulWidget {
   final id_exp;
   final title;
+  final id_step;
 
-  const AddStep({super.key, this.id_exp, this.title});
+  const AddStep({super.key, this.id_exp, this.title, this.id_step});
 
   @override
   State<AddStep> createState() => _AddStepState();
@@ -25,6 +26,7 @@ class _AddStepState extends State<AddStep> {
 
   final TextEditingController _title = TextEditingController();
   final TextEditingController _description = TextEditingController();
+  DateTime _dateDatabase = DateTime.now();
   String _date =
       DateFormat('EEE, MMM dd yyyy    hh:mm a').format(DateTime.now());
   SQLdb sqLdb = SQLdb();
@@ -41,7 +43,7 @@ class _AddStepState extends State<AddStep> {
     CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: pickImage!.path,
       aspectRatio: cropAspectRatio,
-      compressQuality: 100,
+      compressQuality: 90,
       compressFormat: ImageCompressFormat.jpg,
     );
     if (croppedFile == null) return null;
@@ -113,6 +115,14 @@ class _AddStepState extends State<AddStep> {
                 setState(() {
                   _date =
                       "${dateFormat.format(pickedDate!)}    ${pickedTime!.format(context)}";
+
+                      _dateDatabase = DateTime(
+                        pickedDate.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        pickedTime.hour,
+                        pickedTime.minute,
+                      );
                 });
               }
             },
@@ -185,7 +195,7 @@ class _AddStepState extends State<AddStep> {
             onPressed: () async {
               if (_title.text.isNotEmpty == true) {
                 int rep = await sqLdb.insertData(
-                    "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\")");
+                    "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${_dateDatabase}\")");
 
                 List<Map> listStep =
                     await sqLdb.getData("SELECT * FROM 'step'");

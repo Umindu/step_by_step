@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -23,7 +27,8 @@ class SQLdb {
 
   //----------------------------------------------------
   _createDB(Database db, int version) async {
-    await db.execute('''
+    await db.execute(
+        '''
      CREATE TABLE "experiment" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
      "date" TEXT NOT NULL,
@@ -34,7 +39,8 @@ class SQLdb {
      ''');
     print("=====================experiment created!==================");
 
-    await db.execute('''
+    await db.execute(
+        '''
      CREATE TABLE "step" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "id_exp" INTEGER NOT NULL,
@@ -47,7 +53,8 @@ class SQLdb {
      ''');
     print("=====================step created!==================");
 
-    await db.execute('''
+    await db.execute(
+        '''
      CREATE TABLE "image" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "id_step" INTEGER NOT NULL,
@@ -87,4 +94,61 @@ class SQLdb {
     return reponse;
   }
 //-------------------------
+
+deleteDB() {
+  try{
+    deleteDatabase("/data/user/0/com.example.step_by_step/databases/StepbyStep.db");
+  }catch(e){
+    print(e);
+  }
+}
+
+  backupDB() async {
+    var status = await Permission.manageExternalStorage.status;
+    if (!status.isGranted) {
+      await Permission.manageExternalStorage.request();
+    }
+    var status1 = await Permission.storage.status;
+
+    if (!status1.isGranted) {
+      await Permission.storage.request();
+    }
+
+    try{
+      File ourDBFile = File("/data/user/0/com.example.step_by_step/databases/StepbyStep");
+      Directory? folderPathForDBFile = Directory("/storage/emulated/0/StepbyStepDatabse/");
+      await folderPathForDBFile.create();
+      await ourDBFile.copy("/storage/emulated/0/StepbyStepDatabse/StepbyStep.db");
+    }catch(e){
+      print(e);
+    }
+  }
+
+  restoreDB() async {
+    var status = await Permission.manageExternalStorage.status;
+    if (!status.isGranted) {
+      await Permission.manageExternalStorage.request();
+    }
+    var status1 = await Permission.storage.status;
+
+    if (!status1.isGranted) {
+      await Permission.storage.request();
+    }
+
+    try{
+      File saveDBFile = File("/storage/emulated/0/StepbyStep/StepbyStep.db");
+      await saveDBFile.copy("/data/user/0/com.example.step_by_step/databases/StepbyStep.db");
+    }catch(e){
+      print(e);
+    }
+  }
+
+
+
+  getDBPath() async {
+    String databasePath = await getDatabasesPath();
+    print("======================${databasePath}");
+    Directory? externalStorangePath = await getExternalStorageDirectory();
+    print("======================${externalStorangePath}");
+  }
 }
