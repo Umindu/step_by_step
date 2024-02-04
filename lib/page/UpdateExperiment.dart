@@ -13,55 +13,82 @@ class UpdateExperiment extends StatefulWidget {
 }
 
 class _UpdateExperimentState extends State<UpdateExperiment> {
-  TextEditingController _titre = TextEditingController();
-  TextEditingController _duree = TextEditingController();
+  TextEditingController _title = TextEditingController();
+  TextEditingController _description = TextEditingController();
   SQLdb sqLdb = SQLdb();
 @override
   void initState() {
-  _titre.text = widget.title;
-  _duree.text = widget.description.toString();
+  _title.text = widget.title;
+  _description.text = widget.description.toString();
     super.initState();
   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Update Film"),),
+      appBar: AppBar(title: const Text("Update Experiment"),),
       body: Container(
         margin: const EdgeInsets.all(10),
         child: Column(
           children: [
             const SizedBox(height: 20,),
             TextField(
-              controller: _titre,
-              style:  const TextStyle(fontSize: 20,color: Colors.purple),
-              decoration:  const InputDecoration(
-                labelText: "Titre",
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+              controller: _title,
+              style:  const TextStyle(fontSize: 18),
+              decoration: const InputDecoration(
+                labelText: "Title",
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(),
+                ),
               ),
             ),
             const SizedBox(height: 20,),
             TextField(
-              controller: _duree,
-              style: const TextStyle(fontSize: 20,color: Colors.purple),
+              controller: _description,
+              style: const TextStyle(fontSize: 16),
               decoration: const InputDecoration(
-                labelText: "Durée",
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+                labelText: "Description",
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(),
+                ),
               ),
             ),
-            const SizedBox(height: 20,),
+            const Spacer(),
             ElevatedButton(onPressed: ()async{
               int rep = await sqLdb.updateData('''
-              UPDATE "films" SET
-              titre = "${_titre.text}",
-              duree = ${int.parse(_duree.text)}
-              WHERE id = "${widget.id}"
+              UPDATE "experiment" SET
+              title = "${_title.text}",
+              description = "${_description.text}"
+              WHERE id = ${widget.id}
               ''');
               if(rep>0){
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context)=>const Home()),
                         (route) => false);
               }
-            }, child: const Text("Modifier"))
+            }, child: const SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.update,
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "Update Experiment",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    )))
 
           ],
         ),

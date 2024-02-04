@@ -55,7 +55,6 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
                         // circal backgroung text
                             CircleAvatar(
                           radius: 20,
-                          backgroundColor: Colors.deepPurpleAccent,
                           child: Text(
                             "${_listSize - index}",
                             style: const TextStyle(

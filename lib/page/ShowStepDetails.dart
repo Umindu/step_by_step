@@ -1,10 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:step_by_step/db/SQLDB.dart';
-import 'package:path_provider/path_provider.dart' as syspath;
+import 'package:step_by_step/page/Utility.dart';
 
 class ShowStepDetails extends StatefulWidget {
   final int id;
@@ -15,7 +12,13 @@ class ShowStepDetails extends StatefulWidget {
 }
 
 class _ShowStepDetailsState extends State<ShowStepDetails> {
-  File? _image;
+  String? base64String;
+  String? date;
+  String? title;
+  String? description;
+
+  final TextEditingController _title = TextEditingController();
+  final TextEditingController _description = TextEditingController();
 
   SQLdb sqLdb = SQLdb();
 
@@ -23,23 +26,18 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
     List<Map> step = await sqLdb.getData("SELECT * FROM 'step' WHERE id = ${widget.id}");
 
     List<Map> imge = await sqLdb.getData("SELECT * FROM 'image' WHERE id_step = ${widget.id}");
-    print(imge);
 
-  
-    //load base64 to _image
     if (imge.isNotEmpty) {
-      // Uint8List bytes = base64Decode(imge[0]['image']);
-      final tempDir = await syspath.getApplicationDocumentsDirectory();
-      final file = await File('${tempDir.path}/${imge[0]['image']}').create();
-      print(file);
-      // await file.writeAsBytes(bytes);
       setState(() {
-        _image = file;
+        date = step[0]['date'];
+        title = step[0]['title'];
+        description = step[0]['description'];
+        base64String = imge[0]['image'];
+
+        _title.value = TextEditingValue(text: title!);
+        _description.value = TextEditingValue(text: description!);
       });
     }
-
-    
-
   }
 
   @override
@@ -52,44 +50,45 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Step Details"),
+        title: Text(title == null ? "" : title!),
       ),
       body: SingleChildScrollView(
-        child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const SizedBox(
-                height: 20,
-              ),
               Text(
-                  '${widget.id}',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                //date format 
+                date == null ? "" :  DateFormat('EEE, MMM dd yyyy    hh:mm a').format(DateTime.parse(date!)),
+              ),
+              TextField(
+                controller: _title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                ),
+              ),
+              TextField(
+                controller: _description,
+                
+                minLines: 1,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                ),
               ),
               const SizedBox(
-                height: 20,
+                height: 10,
               ),
-              const Text(
-                "Step Title",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text(
-                "Step Description",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              _image != null
-                  ? Image.file(
-                      _image!,
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.cover,
-                    )
+              Container(
+                height: null,
+                width: MediaQuery.of(context).size.width,
+                child: base64String != null
+                  ? Image.memory(Utility.dataFromBase64String(base64String!), fit: BoxFit.cover,)
                   : const Text("No Image"),
+              ),
             ],
           ),
         ),

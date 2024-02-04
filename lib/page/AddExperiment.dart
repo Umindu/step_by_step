@@ -82,11 +82,12 @@ class _AddExperimentState extends State<AddExperiment> {
                           width: 10,
                         ),
                         Text(
-                          "Add",
+                          "Add Experiment",
                           style: TextStyle(fontSize: 18),
                         ),
                       ],
-                    ))),
+                    ))
+                    ),
             const SizedBox(
               height: 10,
             )

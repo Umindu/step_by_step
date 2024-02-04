@@ -50,7 +50,7 @@ class _HomeState extends State<Home> {
                             return Card(
                               child: ListTile(
                                 leading: const Icon(
-                                  Icons.movie,
+                                  Icons.lightbulb,
                                 ),
                                 title: Text(
                                   "${listFilms[index]['title']}",
@@ -109,7 +109,7 @@ class _HomeState extends State<Home> {
                                                               (context) =>
                                                                   AlertDialog(
                                                                     title: Text(
-                                                                        "Are you sure delete? ${listFilms[index]['title']}"),
+                                                                        "Are you sure you want to delete? ${listFilms[index]['title']}", style: TextStyle(fontSize: 18),),
                                                                     actions: [
                                                                       ElevatedButton(
                                                                           onPressed:

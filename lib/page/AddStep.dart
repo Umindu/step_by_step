@@ -1,17 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:step_by_step/db/SQLDB.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart' as syspath;
-import 'package:image/image.dart' as img;
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
-import 'package:step_by_step/page/Utility.dart';
 
 class AddStep extends StatefulWidget {
   final id_exp;
@@ -24,7 +18,8 @@ class AddStep extends StatefulWidget {
 }
 
 class _AddStepState extends State<AddStep> {
-  File? _image;
+  XFile? _imageFile;
+  String? base64String;
 
   final TextEditingController _title = TextEditingController();
   final TextEditingController _description = TextEditingController();
@@ -39,18 +34,22 @@ class _AddStepState extends State<AddStep> {
     final image = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        _image = File(image.path);
+        _imageFile = image;
       });
     }
+    List<int> imageBytes = await File(_imageFile!.path).readAsBytesSync();
+    base64String = base64Encode(imageBytes);
   }
 
   void getImageCamera() async {
     final image = await ImagePicker().pickImage(source: ImageSource.camera);
     if (image != null) {
       setState(() {
-        _image = File(image.path);
+        _imageFile = image;
       });
     }
+    List<int> imageBytes = await File(_imageFile!.path).readAsBytesSync();
+    base64String = base64Encode(imageBytes);
   }
 
   @override
@@ -95,6 +94,7 @@ class _AddStepState extends State<AddStep> {
                             leading: const Icon(Icons.camera_alt_outlined),
                             title: const Text("Camera"),
                             onTap: () async {
+                              Navigator.pop(context);
                               getImageCamera();
                             },
                           ),
@@ -102,6 +102,7 @@ class _AddStepState extends State<AddStep> {
                             leading: const Icon(Icons.photo_outlined),
                             title: const Text("Gallery"),
                             onTap: () async {
+                              Navigator.pop(context);
                               getImageGallery();
                             },
                           ),
@@ -118,26 +119,13 @@ class _AddStepState extends State<AddStep> {
                 int rep = await sqLdb.insertData(
                     "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\")");
 
-                // get step table last id
-                List<Map> listStep =
-                    await sqLdb.getData("SELECT * FROM 'step'");
-                int id_step = listStep.last['id'];
-
-                if (_image != null) {
-                  // save image
-                  final appDir = await syspath.getApplicationDocumentsDirectory();
-                  final fileName = path.basename(_image!.path);
-                  final savedImage = await _image!.copy('${appDir.path}/$fileName');
-                  print(savedImage.path);
-
-                  // save image to db
-                  Uint8List bytes = await savedImage.readAsBytes();
-
-                  String base64Image = base64Encode(bytes);
-                  print(base64Image);
+                if (_imageFile != null) {
+                  List<Map> listStep =
+                      await sqLdb.getData("SELECT * FROM 'step'");
+                  int idStep = listStep.last['id'];
 
                   await sqLdb.insertData(
-                      "INSERT INTO 'image' (id_step, image) VALUES ($id_step,\"$fileName\")");
+                      "INSERT INTO 'image' (id_step, image) VALUES ($idStep,\"$base64String\")");
                 }
 
                 if (rep > 0) {
@@ -190,14 +178,11 @@ class _AddStepState extends State<AddStep> {
                 height: 10,
               ),
               Container(
-                height: 200,
+                height: null,
                 width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: _image != null
+                child: _imageFile != null
                     ? Image.file(
-                        _image!,
+                        File(_imageFile!.path),
                         fit: BoxFit.cover,
                       )
                     : const Center(
