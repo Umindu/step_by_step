@@ -33,6 +33,35 @@ class _HomeState extends State<Home> {
     if (statuses[Permission.storage]!.isGranted) {
       File file = await sqLdb.exportDB();
       if (file.path.isNotEmpty) {
+
+        // //storage/emulated/0/StepbyStep/Images/ all folder convert to zip and copy to the Download folder
+        // Directory? folderPathForImageFile =
+        //     Directory("/storage/emulated/0/StepbyStep/Images/");
+        // if (folderPathForImageFile.existsSync()) {
+        //   List<FileSystemEntity> list = folderPathForImageFile.listSync();
+        //   if (list.isNotEmpty) {
+        //     Archive archive = Archive();
+        //     for (FileSystemEntity file in list) {
+        //       if (file is File) {
+        //         String filename = file.path.split("/").last;
+        //         ArchiveFile archiveFile = ArchiveFile(filename, file.lengthSync(),
+        //             file.readAsBytesSync());
+        //         archive.addFile(archiveFile);
+        //       }
+        //     }
+        //     File("/storage/emulated/0/StepbyStep/Images.zip")
+        //       ..createSync(recursive: true)
+        //       ..writeAsBytesSync(ZipEncoder().encode(archive)!);
+
+        //     File("/storage/emulated/0/StepbyStep/Images.zip")
+        //         .copy("/storage/emulated/0/Download/Images.zip");
+
+        //     //delete folder
+        //     // folderPathForImageFile.deleteSync(recursive: true);
+        //   }
+        // }
+
+
         //show SnackBar
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
@@ -66,6 +95,16 @@ class _HomeState extends State<Home> {
             String filename = file.name;
             if (file.isFile) {
               List<int> data = file.content as List<int>;
+
+              //create folder
+              Directory? folderPathForFile =
+                  Directory("/storage/emulated/0/StepbyStep/");
+              await folderPathForFile.create();
+              //create images folder
+              Directory? folderPathForImageFile =
+                  Directory("/storage/emulated/0/StepbyStep/Images");
+              await folderPathForImageFile.create();
+
               try {
                 File("/storage/emulated/0/StepbyStep/Images/$filename")
                   ..createSync(recursive: true)
