@@ -76,7 +76,7 @@ class _AddExperimentState extends State<AddExperiment> {
                   if (_title.text.isNotEmpty == true) {
                     if (widget.id == null) {
                       int rep = await sqLdb.insertData(
-                          "INSERT INTO 'experiment' (title, description, date) VALUES (\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\")");
+                          "INSERT INTO 'experiment' (title, description, date, status) VALUES (\"${_title.text}\",\"${_description.text}\",\"${DateTime.now().toString()}\",'active')");
                       if (rep > 0) {
                         Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(

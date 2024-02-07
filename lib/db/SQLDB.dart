@@ -34,7 +34,8 @@ class SQLdb {
      "date" TEXT NOT NULL,
      "title" TEXT NOT NULL,
      "description" TEXT,
-      "image" TEXT
+      "image" TEXT,
+      "status" TEXT
       )
      ''');
     print("=====================experiment created!==================");
@@ -47,7 +48,7 @@ class SQLdb {
      "date" TEXT NOT NULL,
      "title" TEXT NOT NULL,
      "description" TEXT,
-      "image" TEXT,
+      "status" TEXT,
       FOREIGN KEY (id_exp) REFERENCES experiment(id)
       )
      ''');
@@ -57,8 +58,11 @@ class SQLdb {
         '''
      CREATE TABLE "image" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+      "id_exp" INTEGER NOT NULL,
       "id_step" INTEGER NOT NULL,
       "image" BLOB,
+      "status" TEXT,
+      FOREIGN KEY (id_exp) REFERENCES experiment(id),
       FOREIGN KEY (id_step) REFERENCES step(id)
       )
      ''');
@@ -95,13 +99,14 @@ class SQLdb {
   }
 //-------------------------
 
-deleteDB() {
-  try{
-    deleteDatabase("/data/user/0/com.example.step_by_step/databases/StepbyStep.db");
-  }catch(e){
-    print(e);
+  deleteDB() async {
+    try {
+      deleteDatabase(
+          "/data/user/0/com.example.step_by_step/databases/StepbyStep");
+    } catch (e) {
+      print(e);
+    }
   }
-}
 
   backupDB() async {
     var status = await Permission.manageExternalStorage.status;
@@ -114,13 +119,21 @@ deleteDB() {
       await Permission.storage.request();
     }
 
-    try{
-      File ourDBFile = File("/data/user/0/com.example.step_by_step/databases/StepbyStep");
-      Directory? folderPathForDBFile = Directory("/storage/emulated/0/StepbyStepDatabse/");
+    try {
+      File ourDBFile =
+          File("/data/user/0/com.example.step_by_step/databases/StepbyStep");
+      Directory? folderPathForFile =
+          Directory("/storage/emulated/0/StepbyStep/");
+      await folderPathForFile.create();
+      Directory? folderPathForDBFile =
+          Directory("/storage/emulated/0/StepbyStep/Databases/");
       await folderPathForDBFile.create();
-      await ourDBFile.copy("/storage/emulated/0/StepbyStepDatabse/StepbyStep.db");
-    }catch(e){
+      await ourDBFile
+          .copy("/storage/emulated/0/StepbyStep/Databases/StepbyStep.db");
+      return true;
+    } catch (e) {
       print(e);
+      return false;
     }
   }
 
@@ -135,15 +148,53 @@ deleteDB() {
       await Permission.storage.request();
     }
 
-    try{
-      File saveDBFile = File("/storage/emulated/0/StepbyStep/StepbyStep.db");
-      await saveDBFile.copy("/data/user/0/com.example.step_by_step/databases/StepbyStep.db");
-    }catch(e){
+    try {
+      await deleteDB();
+      File ourDBFile =
+          File("/storage/emulated/0/StepbyStep/Databases/StepbyStep.db");
+      Directory? folderPathForDBFile =
+          Directory("/data/user/0/com.example.step_by_step/databases");
+      await folderPathForDBFile.create();
+      await ourDBFile
+          .copy("/data/user/0/com.example.step_by_step/databases/StepbyStep");
+
+      _db = null;
+      return true;
+    } catch (e) {
       print(e);
+      return false;
     }
   }
 
+  importDB(File file) async {
+    try {
+      await deleteDB();
+      Directory? folderPathForDBFile =
+          Directory("/data/user/0/com.example.step_by_step/databases");
+      await folderPathForDBFile.create();
+      await file
+          .copy("/data/user/0/com.example.step_by_step/databases/StepbyStep");
 
+      _db = null;
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  exportDB() async {
+    try {
+      File ourDBFile =
+          File("/data/user/0/com.example.step_by_step/databases/StepbyStep");
+      //copy the file to the external storage download folder
+      await ourDBFile.copy("/storage/emulated/0/Download/StepbyStep.db");
+      return ourDBFile;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
 
   getDBPath() async {
     String databasePath = await getDatabasesPath();

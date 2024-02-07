@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:step_by_step/db/SQLDB.dart';
-import 'package:step_by_step/page/Utility.dart';
 
 class ShowStepDetails extends StatefulWidget {
   final int id;
@@ -36,12 +37,12 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
 
     List<Map> imge = await sqLdb
         .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id}");
-    print(imge);
-    if (imge[0]['image'] != null) {
+
+    imge.forEach((element) {
       setState(() {
-        base64String = imge[0]['image'];
+        base64String = element['image'];
       });
-    }
+    });
   }
 
   @override
@@ -78,27 +79,25 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
                   border: InputBorder.none,
                 ),
               ),
-              TextField(
-                readOnly: true,
-                controller: _description,
-                minLines: 1,
-                maxLines: null,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
+              if (_description.text != "")
+                TextField(
+                  readOnly: true,
+                  controller: _description,
+                  minLines: 1,
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                  ),
                 ),
-              ),
               const SizedBox(
                 height: 10,
               ),
               Container(
                 height: null,
                 width: MediaQuery.of(context).size.width,
-                child: base64String != null
-                    ? Image.memory(
-                        Utility.dataFromBase64String(base64String!),
-                        fit: BoxFit.cover,
-                      )
-                    : Text("No Image"),
+                child: base64String == null
+                    ? Center(child: const Text("No image"))
+                    : Image.file(File(base64String!)),
               ),
             ],
           ),

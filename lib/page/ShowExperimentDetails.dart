@@ -16,12 +16,11 @@ class ShowExperimentDetails extends StatefulWidget {
 class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
   SQLdb sqLdb = SQLdb();
   //---------------------------------
-  Future<List<Map>> getAllFilms() async {
-    List<Map> step =
-        await sqLdb.getData("SELECT * FROM 'step' WHERE id_exp = ${widget.id}");
+  Future<List<Map>> getAllSteps() async {
+    List<Map> step = await sqLdb.getData(
+        "SELECT * FROM 'step' WHERE id_exp = ${widget.id} AND status = 'active'");
     return step;
   }
-  //---------------------------------
 
   int _listSize = 0;
   @override
@@ -38,158 +37,185 @@ class _ShowExperimentDetailsState extends State<ShowExperimentDetails> {
             icon: const Icon(Icons.arrow_back),
           ),
         ),
-        body: Center(
-            child: FutureBuilder(
-          future: getAllFilms(),
-          builder: (ctx, snp) {
-            if (snp.hasData) {
-              List<Map> listStep = snp.data!.reversed.toList();
-              _listSize = listStep.length;
+        body: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 10),
+          child: FutureBuilder(
+            future: getAllSteps(),
+            builder: (ctx, snp) {
+              if (snp.hasData) {
+                List<Map> listStep = snp.data!.reversed.toList();
+                _listSize = listStep.length;
 
-              return ListView.builder(
-                  itemCount: listStep.length,
-                  itemBuilder: (ctx, index) {
-                    return Card(
-                      child: ListTile(
-                        leading:
-                            // circal backgroung text
-                            CircleAvatar(
-                          radius: 20,
-                          child: Text(
-                            "${_listSize - index}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                return ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: listStep.length,
+                    itemBuilder: (ctx, index) {
+                      return Card(
+                        child: ListTile(
+                          leading:
+                              // circal backgroung text
+                              CircleAvatar(
+                            radius: 20,
+                            child: Text(
+                              "${_listSize - index}",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                        title: Text(
-                          "${listStep[index]['title']}",
-                          style: const TextStyle(
-                            fontSize: 18,
+                          title: Text(
+                            "${listStep[index]['title']}",
+                            style: const TextStyle(
+                              fontSize: 18,
+                            ),
                           ),
+                          subtitle: Text(
+                            "${listStep[index]['description']}",
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          trailing: IconButton(
+                              onPressed: () {
+                                //show menu
+                                showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return Container(
+                                        height: 180,
+                                        child: Column(
+                                          children: [
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
+                                            ListTile(
+                                              leading: const Icon(
+                                                Icons.edit,
+                                              ),
+                                              title: const Text("Edit"),
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            AddEditStep(
+                                                                id_exp:
+                                                                    widget.id,
+                                                                title: widget
+                                                                    .title,
+                                                                id_step: listStep[
+                                                                        index]
+                                                                    ['id'])));
+                                              },
+                                            ),
+                                            ListTile(
+                                              leading: const Icon(
+                                                Icons.delete,
+                                              ),
+                                              title: const Text("Delete"),
+                                              onTap: () {
+                                                Navigator.of(context).pop();
+                                                showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (context) =>
+                                                            AlertDialog(
+                                                              title: Text(
+                                                                  "Are you sure delete? ${listStep[index]['title']}"),
+                                                              actions: [
+                                                                ElevatedButton(
+                                                                    onPressed:
+                                                                        () async {
+                                                                      try {
+                                                                        int rep =
+                                                                            await sqLdb.updateData("UPDATE 'step' SET status = 'deleted' WHERE id = ${listStep[index]['id']}");
+                                                                        int rep2 =
+                                                                            await sqLdb.updateData("UPDATE 'image' SET status = 'deleted' WHERE id_step = ${listStep[index]['id']}");
+
+                                                                        print(
+                                                                            "rep: $rep, rep2: $rep2");
+                                                                        if (rep >
+                                                                            0) {
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(const SnackBar(
+                                                                            content:
+                                                                                Text("Delete successfully!"),
+                                                                          ));
+                                                                        } else {
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(const SnackBar(
+                                                                            content:
+                                                                                Text("Delete failed!"),
+                                                                          ));
+                                                                        }
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                        setState(
+                                                                            () {});
+                                                                      } catch (e) {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(const SnackBar(
+                                                                          content:
+                                                                              Text("Delete failed!"),
+                                                                        ));
+                                                                      }
+                                                                    },
+                                                                    child: const Text(
+                                                                        "Ok")),
+                                                                ElevatedButton(
+                                                                    onPressed:
+                                                                        () {
+                                                                      Navigator.of(
+                                                                              context)
+                                                                          .pop();
+                                                                    },
+                                                                    child: const Text(
+                                                                        "Cancel")),
+                                                              ],
+                                                            ));
+                                              },
+                                            ),
+                                            ListTile(
+                                              leading: const Icon(
+                                                Icons.info,
+                                              ),
+                                              title: const Text("Details"),
+                                              onTap: () {
+                                                showModalBottomSheet(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return Container();
+                                                    });
+                                              },
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    });
+                              },
+                              icon: const Icon(
+                                Icons.more_horiz,
+                                size: 25,
+                              )),
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => ShowStepDetails(
+                                      id: listStep[index]['id'],
+                                    )));
+                          },
                         ),
-                        subtitle: Text(
-                          "${listStep[index]['description']}",
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        trailing: IconButton(
-                            onPressed: () {
-                              //show menu
-                              showModalBottomSheet(
-                                  context: context,
-                                  builder: (context) {
-                                    return Container(
-                                      height: 180,
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.edit,
-                                            ),
-                                            title: const Text("Edit"),
-                                            onTap: () {
-                                              Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          AddEditStep(
-                                                              id_exp: widget.id,
-                                                              title:
-                                                                  widget.title,
-                                                              id_step: listStep[
-                                                                      index]
-                                                                  ['id'])));
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.delete,
-                                            ),
-                                            title: const Text("Delete"),
-                                            onTap: () {
-                                              showDialog(
-                                                  context: context,
-                                                  builder: (context) =>
-                                                      AlertDialog(
-                                                        title: Text(
-                                                            "Are you sure delete? ${listStep[index]['title']}"),
-                                                        actions: [
-                                                          ElevatedButton(
-                                                              onPressed:
-                                                                  () async {
-                                                                int rep = await sqLdb
-                                                                    .deleteData(
-                                                                        "DELETE FROM 'step' WHERE id = ${listStep[index]['id']}");
-                                                                if (rep > 0) {
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pop();
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pop();
-                                                                  setState(
-                                                                      () {});
-                                                                }
-                                                              },
-                                                              child: const Text(
-                                                                  "Ok")),
-                                                          ElevatedButton(
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: const Text(
-                                                                  "Cancel")),
-                                                        ],
-                                                      ));
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.info,
-                                            ),
-                                            title: const Text("Details"),
-                                            onTap: () {
-                                              showModalBottomSheet(
-                                                  context: context,
-                                                  builder: (context) {
-                                                    return Container();
-                                                  });
-                                            },
-                                          )
-                                        ],
-                                      ),
-                                    );
-                                  });
-                            },
-                            icon: const Icon(
-                              Icons.more_horiz,
-                              size: 25,
-                            )),
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => ShowStepDetails(
-                                    id: listStep[index]['id'],
-                                  )));
-                        },
-                      ),
-                    );
-                  });
-            } else if (snp.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              return const Center(
-                child: Text("empty"),
-              );
-            }
-          },
-        )),
+                      );
+                    });
+              } else if (snp.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else {
+                return const Center(
+                  child: Text("empty"),
+                );
+              }
+            },
+          ),
+        ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:step_by_step/page/Utility.dart';
+import 'package:path/path.dart' as path;
 
 class AddEditStep extends StatefulWidget {
   final id_exp;
@@ -23,7 +22,8 @@ class AddEditStep extends StatefulWidget {
 
 class _AddEditStepState extends State<AddEditStep> {
   XFile? _imageFile;
-  String? base64String;
+  String? imagePath;
+  bool _haveImage = false;
 
   final TextEditingController _title = TextEditingController();
   final TextEditingController _description = TextEditingController();
@@ -43,7 +43,7 @@ class _AddEditStepState extends State<AddEditStep> {
 
     CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: pickImage!.path,
-      aspectRatio: cropAspectRatio,
+      // aspectRatio: cropAspectRatio,
       compressQuality: 90,
       compressFormat: ImageCompressFormat.jpg,
     );
@@ -52,67 +52,88 @@ class _AddEditStepState extends State<AddEditStep> {
     return XFile(croppedFile.path);
   }
 
-  void getImageGallery() async {
+  void getImageGallery() {
     CropImage(
             cropAspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
             imageSource: ImageSource.gallery)
-        .then((value) => setState(() async {
-              _imageFile = value;
-              List<int> imageBytes =
-                  await File(_imageFile!.path).readAsBytesSync();
-              setState(() {
-                base64String = base64Encode(imageBytes);
-                print(base64String);
-              });
-            }));
+        .then((value) async {
+      _imageFile = value;
+      final fileName = path.basename(_imageFile!.path);
+      //create folder
+      Directory? folderPathForFile =
+          Directory("/storage/emulated/0/StepbyStep/");
+      await folderPathForFile.create();
+      //create images folder
+      Directory? folderPathForImageFile =
+          Directory("/storage/emulated/0/StepbyStep/Images");
+      await folderPathForImageFile.create();
+      //create experiment folder
+      Directory? imgfolderPathForDBFile =
+          Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      await imgfolderPathForDBFile.create();
+      final savedImage = await File(_imageFile!.path).copy(
+          '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+      setState(() {
+        imagePath = savedImage.path;
+      });
+    });
   }
 
-  // void getImageGallery() async {
-  //   final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-  //   if (image != null) {
-  //     setState(() {
-  //       _imageFile = image;
-  //     });
-  //   }
-  //   List<int> imageBytes = await File(_imageFile!.path).readAsBytesSync();
-  //   setState(() {
-  //     base64String = base64Encode(imageBytes);
-  //   });
-  // }
-
-  void getImageCamera() async {
+  void getImageCamera() {
     CropImage(
             cropAspectRatio: const CropAspectRatio(ratioX: 9, ratioY: 16),
             imageSource: ImageSource.camera)
-        .then((value) => setState(() async {
-              _imageFile = value;
-              List<int> imageBytes =
-                  await File(_imageFile!.path).readAsBytesSync();
-              setState(() {
-                base64String = base64Encode(imageBytes);
-                print(base64String);
-              });
-            }));
+        .then((value) async {
+      _imageFile = value;
+      final fileName = path.basename(_imageFile!.path);
+      //create folder
+      Directory? folderPathForFile =
+          Directory("/storage/emulated/0/StepbyStep/");
+      await folderPathForFile.create();
+      //create images folder
+      Directory? folderPathForImageFile =
+          Directory("/storage/emulated/0/StepbyStep/Images");
+      await folderPathForImageFile.create();
+      //create experiment folder
+      Directory? imgfolderPathForDBFile =
+          Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      await imgfolderPathForDBFile.create();
+      final savedImage = await File(_imageFile!.path).copy(
+          '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+      setState(() {
+        imagePath = savedImage.path;
+      });
+    });
+  }
+
+  Future<void> getUpdateStep() async {
+    List<Map> step = await sqLdb
+        .getData("SELECT * FROM 'step' WHERE id = ${widget.id_step}");
+
+    setState(() {
+      _title.text = step[0]['title'];
+      _description.text = step[0]['description'];
+      _date = DateFormat('EEE, MMM dd yyyy    hh:mm a')
+          .format(DateTime.parse(step[0]['date']));
+      _dateDatabase = DateTime.parse(step[0]['date']);
+    });
+
+    List<Map> imge = await sqLdb
+        .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id_step}");
+
+    imge.forEach((element) {
+      setState(() {
+        imagePath = element['image'];
+        _haveImage = true;
+      });
+    });
   }
 
   @override
   void initState() {
     super.initState();
     if (widget.id_step != null) {
-      sqLdb
-          .getData("SELECT * FROM 'step' WHERE id = ${widget.id_step}")
-          .then((value) => setState(() {
-                _title.text = value[0]['title'];
-                _description.text = value[0]['description'];
-                _date = DateFormat('EEE, MMM dd yyyy    hh:mm a')
-                    .format(value[0]['date']);
-                _dateDatabase = DateTime.parse(value[0]['date']);
-              }));
-      sqLdb
-          .getData("SELECT * FROM 'image' WHERE id_step = ${widget.id_step}")
-          .then((value) => setState(() {
-                base64String = value[0]['image'];
-              }));
+      getUpdateStep();
     }
   }
 
@@ -220,16 +241,15 @@ class _AddEditStepState extends State<AddEditStep> {
               if (_title.text.isNotEmpty == true) {
                 if (widget.id_step == null) {
                   int rep = await sqLdb.insertData(
-                      "INSERT INTO 'step' (id_exp, title, description, date) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${_dateDatabase}\")");
+                      "INSERT INTO 'step' (id_exp, title, description, date, status) VALUES (${widget.id_exp},\"${_title.text}\",\"${_description.text}\",\"${_dateDatabase}\",'active')");
 
                   List<Map> listStep =
                       await sqLdb.getData("SELECT * FROM 'step'");
                   int idStep = listStep.last['id'];
 
-                  if (base64String != null) {
-                    print(base64String);
+                  if (imagePath != null) {
                     await sqLdb.insertData(
-                        "INSERT INTO 'image' (id_step, image) VALUES (${idStep},\"$base64String\")");
+                        "INSERT INTO 'image' (id_exp, id_step, image, status) VALUES (${widget.id_exp}, ${idStep},\"$imagePath\",'active')");
                   }
                   if (rep > 0) {
                     Navigator.of(context).pushAndRemoveUntil(
@@ -240,19 +260,26 @@ class _AddEditStepState extends State<AddEditStep> {
                                 )),
                         (route) => false);
                   }
-                }else{
-                  int rep = await sqLdb.updateData("UPDATE 'step' SET title = \"${_title.text}\", description = \"${_description.text}\", date = \"${_dateDatabase}\" WHERE id = ${widget.id_step}");
-                  if (base64String != null) {
-                    await sqLdb.updateData("UPDATE 'image' SET image = \"$base64String\" WHERE id_step = ${widget.id_step}");
+                } else {
+                  int rep = await sqLdb.updateData(
+                      "UPDATE 'step' SET title = \"${_title.text}\", description = \"${_description.text}\", date = \"${_dateDatabase}\" WHERE id = ${widget.id_step}");
+                  if (imagePath != null) {
+                    if (_haveImage) {
+                      await sqLdb.updateData(
+                          "UPDATE 'image' SET image = \"$imagePath\" WHERE id_step = ${widget.id_step}");
+                    } else {
+                      await sqLdb.insertData(
+                          "INSERT INTO 'image' (id_exp, id_step, image, status) VALUES (${widget.id_exp}, ${widget.id_step},\"$imagePath\",'active')");
+                    }
                   }
                   if (rep > 0) {
                     Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                             builder: (context) => ShowExperimentDetails(
-                              id: widget.id_exp,
-                              title: widget.title,
-                            )),
-                            (route) => false);
+                                  id: widget.id_exp,
+                                  title: widget.title,
+                                )),
+                        (route) => false);
                   }
                 }
               } else {
@@ -305,18 +332,15 @@ class _AddEditStepState extends State<AddEditStep> {
                               fit: BoxFit.cover,
                             )
                           : const Center(
-                              child: Text("No Image"),
+                              child: Text(""),
                             ),
                     )
                   : Container(
                       height: null,
                       width: MediaQuery.of(context).size.width,
-                      child: base64String != null
-                          ? Image.memory(
-                              Utility.dataFromBase64String(base64String!),
-                              fit: BoxFit.cover,
-                            )
-                          : const Text("No Image"),
+                      child: imagePath == null
+                          ? const Center(child: Text("No image"))
+                          : Image.file(File(imagePath!)),
                     ),
             ],
           ),
