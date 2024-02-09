@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+// import 'package:share_plus/share_plus.dart';
 import 'package:step_by_step/db/SQLDB.dart';
 import 'package:step_by_step/page/AddExperiment.dart';
 import 'package:step_by_step/page/ShowExperimentDetails.dart';
@@ -25,22 +26,23 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> exportDB() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-    ].request();
+    // Share.share('check out my website https://example.com');
+    // Map<Permission, PermissionStatus> statuses = await [
+    //   Permission.storage,
+    // ].request();
 
-    if (statuses[Permission.storage]!.isGranted) {
-      if (await sqLdb.exportDB()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Export successfully!, Check in Download folder!")));
+    // if (statuses[Permission.storage]!.isGranted) {
+    //   if (await sqLdb.exportDB()) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //         const SnackBar(content: Text("Export successfully!, Check in Download folder!")));
 
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Export failed!")));
-      }
-    }else{
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Permission denied!")));}
+    //   } else {
+    //     ScaffoldMessenger.of(context)
+    //         .showSnackBar(const SnackBar(content: Text("Export failed!")));
+    //   }
+    // }else{
+    //   ScaffoldMessenger.of(context)
+    //       .showSnackBar(const SnackBar(content: Text("Permission denied!")));}
   }
 
   Future<void> importDB() async {
