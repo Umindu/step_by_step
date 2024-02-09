@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
@@ -27,8 +29,7 @@ class SQLdb {
 
   //----------------------------------------------------
   _createDB(Database db, int version) async {
-    await db.execute(
-        '''
+    await db.execute('''
      CREATE TABLE "experiment" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
      "date" TEXT NOT NULL,
@@ -40,8 +41,7 @@ class SQLdb {
      ''');
     print("=====================experiment created!==================");
 
-    await db.execute(
-        '''
+    await db.execute('''
      CREATE TABLE "step" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "id_exp" INTEGER NOT NULL,
@@ -54,8 +54,7 @@ class SQLdb {
      ''');
     print("=====================step created!==================");
 
-    await db.execute(
-        '''
+    await db.execute('''
      CREATE TABLE "image" (
      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "id_exp" INTEGER NOT NULL,
@@ -126,10 +125,11 @@ class SQLdb {
           Directory("/storage/emulated/0/StepbyStep/");
       await folderPathForFile.create();
       Directory? folderPathForDBFile =
-          Directory("/storage/emulated/0/StepbyStep/Databases/");
+          Directory("/storage/emulated/0/StepbyStep/DatabasesBackup/");
       await folderPathForDBFile.create();
       await ourDBFile
-          .copy("/storage/emulated/0/StepbyStep/Databases/StepbyStep.db");
+          .copy("/storage/emulated/0/StepbyStep/DatabasesBackup/StepbyStep.db");
+          
       return true;
     } catch (e) {
       print(e);
@@ -167,15 +167,42 @@ class SQLdb {
   }
 
   importDB(File file) async {
+    
     try {
       await deleteDB();
-      Directory? folderPathForDBFile =
-          Directory("/data/user/0/com.example.step_by_step/databases");
-      await folderPathForDBFile.create();
-      await file
-          .copy("/data/user/0/com.example.step_by_step/databases/StepbyStep");
+      //StepbyStep.zip file import
+      Archive ourZipFile = ZipDecoder().decodeBytes(file.readAsBytesSync());
+      for (ArchiveFile ourFile in ourZipFile) {
+        String ourFileName = ourFile.name;
+        if (ourFileName.contains("StepbyStep.db")) {
+          File ourDBFile = File(
+              "/data/user/0/com.example.step_by_step/databases/StepbyStep");
+          await ourDBFile.writeAsBytes(ourFile.content);
+
+          File ourFileToWrite =
+              File("/data/user/0/com.example.step_by_step/$ourFileName");
+          await ourFileToWrite.writeAsBytes(ourFile.content);
+        } else {
+          Directory ourImagesFolder =
+              Directory("/data/user/0/com.example.step_by_step/images");
+          await ourImagesFolder.create();
+
+          //get sub folder name
+          String ourSubFolderName = ourFileName.split("_")[0];
+
+          //create sub folder
+          Directory ourSubFolder = Directory(
+              "/data/user/0/com.example.step_by_step/images/$ourSubFolderName");
+          await ourSubFolder.create();
+
+          File ourFileToWrite = File(
+              "/data/user/0/com.example.step_by_step/images/$ourSubFolderName/$ourFileName");
+          await ourFileToWrite.writeAsBytes(ourFile.content);
+        }
+      }
 
       _db = null;
+
       return true;
     } catch (e) {
       print(e);
@@ -185,11 +212,38 @@ class SQLdb {
 
   exportDB() async {
     try {
+      //get db file
       File ourDBFile =
           File("/data/user/0/com.example.step_by_step/databases/StepbyStep");
-      //copy the file to the external storage download folder
-      await ourDBFile.copy("/storage/emulated/0/Download/StepbyStep.db");
-      return ourDBFile;
+
+      Archive archive = Archive();
+
+      //add the db file to the archive
+      ArchiveFile ourDBArchiveFile = ArchiveFile(
+          'StepbyStep.db', ourDBFile.lengthSync(), ourDBFile.readAsBytesSync());
+      archive.addFile(ourDBArchiveFile);
+
+      //archive the image folder to the compress
+      Directory ourImagesFolder =
+          Directory("/data/user/0/com.example.step_by_step/images");
+      List<FileSystemEntity> ourImageFiles =
+          ourImagesFolder.listSync(recursive: true, followLinks: false);
+      ourImageFiles.forEach((element) {
+        if (FileSystemEntity.isFileSync(element.path)) {
+          String ourImageFilePath = element.path;
+          String ourImageFileName = basename(ourImageFilePath);
+          ArchiveFile ourImageArchiveFile = ArchiveFile(
+              ourImageFileName,
+              File(ourImageFilePath).lengthSync(),
+              File(ourImageFilePath).readAsBytesSync());
+          archive.addFile(ourImageArchiveFile);
+        }
+      });
+
+      File ourZipFile = File("/storage/emulated/0/Download/StepbyStep.zip");
+      await ourZipFile.writeAsBytes(ZipEncoder().encode(archive)!);
+
+      return true;
     } catch (e) {
       print(e);
       return false;

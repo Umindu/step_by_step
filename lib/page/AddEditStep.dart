@@ -44,7 +44,7 @@ class _AddEditStepState extends State<AddEditStep> {
     CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: pickImage!.path,
       // aspectRatio: cropAspectRatio,
-      compressQuality: 90,
+      compressQuality: 100,
       compressFormat: ImageCompressFormat.jpg,
     );
     if (croppedFile == null) return null;
@@ -60,19 +60,28 @@ class _AddEditStepState extends State<AddEditStep> {
       _imageFile = value;
       final fileName = path.basename(_imageFile!.path);
       //create folder
+      // Directory? folderPathForFile =
+      //     Directory("/storage/emulated/0/StepbyStep/");
+      // await folderPathForFile.create();
+      // //create images folder
+      // Directory? folderPathForImageFile =
+      //     Directory("/storage/emulated/0/StepbyStep/Images");
+      // await folderPathForImageFile.create();
+      // //create experiment folder
+      // Directory? imgfolderPathForDBFile =
+      //     Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      // await imgfolderPathForDBFile.create();
+      // final savedImage = await File(_imageFile!.path).copy(
+      //     '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       Directory? folderPathForFile =
-          Directory("/storage/emulated/0/StepbyStep/");
+          Directory("/data/user/0/com.example.step_by_step/images");
       await folderPathForFile.create();
-      //create images folder
-      Directory? folderPathForImageFile =
-          Directory("/storage/emulated/0/StepbyStep/Images");
-      await folderPathForImageFile.create();
-      //create experiment folder
-      Directory? imgfolderPathForDBFile =
-          Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      Directory? imgfolderPathForDBFile = Directory(
+          "/data/user/0/com.example.step_by_step/images/${widget.id_exp}");
       await imgfolderPathForDBFile.create();
+
       final savedImage = await File(_imageFile!.path).copy(
-          '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+          '/data/user/0/com.example.step_by_step/images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       setState(() {
         imagePath = savedImage.path;
       });
@@ -87,19 +96,28 @@ class _AddEditStepState extends State<AddEditStep> {
       _imageFile = value;
       final fileName = path.basename(_imageFile!.path);
       //create folder
+      // Directory? folderPathForFile =
+      //     Directory("/storage/emulated/0/StepbyStep/");
+      // await folderPathForFile.create();
+      // //create images folder
+      // Directory? folderPathForImageFile =
+      //     Directory("/storage/emulated/0/StepbyStep/Images");
+      // await folderPathForImageFile.create();
+      // //create experiment folder
+      // Directory? imgfolderPathForDBFile =
+      //     Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      // await imgfolderPathForDBFile.create();
+      // final savedImage = await File(_imageFile!.path).copy(
+      //     '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       Directory? folderPathForFile =
-          Directory("/storage/emulated/0/StepbyStep/");
+          Directory("/data/user/0/com.example.step_by_step/images");
       await folderPathForFile.create();
-      //create images folder
-      Directory? folderPathForImageFile =
-          Directory("/storage/emulated/0/StepbyStep/Images");
-      await folderPathForImageFile.create();
-      //create experiment folder
-      Directory? imgfolderPathForDBFile =
-          Directory("/storage/emulated/0/StepbyStep/Images/${widget.id_exp}");
+      Directory? imgfolderPathForDBFile = Directory(
+          "/data/user/0/com.example.step_by_step/images/${widget.id_exp}");
       await imgfolderPathForDBFile.create();
+      
       final savedImage = await File(_imageFile!.path).copy(
-          '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+          '/data/user/0/com.example.step_by_step/images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       setState(() {
         imagePath = savedImage.path;
       });

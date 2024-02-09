@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,49 +30,17 @@ class _HomeState extends State<Home> {
     ].request();
 
     if (statuses[Permission.storage]!.isGranted) {
-      File file = await sqLdb.exportDB();
-      if (file.path.isNotEmpty) {
+      if (await sqLdb.exportDB()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Export successfully!, Check in Download folder!")));
 
-        // //storage/emulated/0/StepbyStep/Images/ all folder convert to zip and copy to the Download folder
-        // Directory? folderPathForImageFile =
-        //     Directory("/storage/emulated/0/StepbyStep/Images/");
-        // if (folderPathForImageFile.existsSync()) {
-        //   List<FileSystemEntity> list = folderPathForImageFile.listSync();
-        //   if (list.isNotEmpty) {
-        //     Archive archive = Archive();
-        //     for (FileSystemEntity file in list) {
-        //       if (file is File) {
-        //         String filename = file.path.split("/").last;
-        //         ArchiveFile archiveFile = ArchiveFile(filename, file.lengthSync(),
-        //             file.readAsBytesSync());
-        //         archive.addFile(archiveFile);
-        //       }
-        //     }
-        //     File("/storage/emulated/0/StepbyStep/Images.zip")
-        //       ..createSync(recursive: true)
-        //       ..writeAsBytesSync(ZipEncoder().encode(archive)!);
-
-        //     File("/storage/emulated/0/StepbyStep/Images.zip")
-        //         .copy("/storage/emulated/0/Download/Images.zip");
-
-        //     //delete folder
-        //     // folderPathForImageFile.deleteSync(recursive: true);
-        //   }
-        // }
-
-
-        //show SnackBar
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                "Export successfully!, Open Download folder to see the file")));
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Export failed!")));
       }
-    } else {
+    }else{
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Permission denied!")));
-    }
+          .showSnackBar(const SnackBar(content: Text("Permission denied!")));}
   }
 
   Future<void> importDB() async {
@@ -87,48 +54,18 @@ class _HomeState extends State<Home> {
           await FilePicker.platform.pickFiles(type: FileType.any);
       if (result != null) {
         File file = File(result.files.single.path!);
-        //check zip file
-        if (file.path.endsWith(".zip")) {
-          //unarchive and save to the /storage/emulated/0/StepbyStep/Images/
-          Archive archive = ZipDecoder().decodeBytes(file.readAsBytesSync());
-          for (ArchiveFile file in archive) {
-            String filename = file.name;
-            if (file.isFile) {
-              List<int> data = file.content as List<int>;
 
-              //create folder
-              Directory? folderPathForFile =
-                  Directory("/storage/emulated/0/StepbyStep/");
-              await folderPathForFile.create();
-              //create images folder
-              Directory? folderPathForImageFile =
-                  Directory("/storage/emulated/0/StepbyStep/Images");
-              await folderPathForImageFile.create();
+        if (await sqLdb.importDB(file)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Import successfully!")));
 
-              try {
-                File("/storage/emulated/0/StepbyStep/Images/$filename")
-                  ..createSync(recursive: true)
-                  ..writeAsBytesSync(data);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Import successfully!")));
-              } catch (e) {
-                print(e);
-              }
-            }
-          }
+          // app restart
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const Home()),
+              (route) => false);
         } else {
-          if (await sqLdb.importDB(file)) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Import successfully!")));
-            //app restart
-            Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const Home()),
-                (route) => false);
-          } else {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(const SnackBar(content: Text("Import failed!")));
-          }
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text("Import failed!")));
         }
       }
     } else {
