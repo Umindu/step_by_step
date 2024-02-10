@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -18,67 +19,189 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   SQLdb sqLdb = SQLdb();
 
-  //---------------------------------
+//get experiment................................
   Future<List<Map>> getExperiment() async {
     List<Map> experiment = await sqLdb
         .getData("SELECT * FROM 'experiment' WHERE status = 'active'");
     return experiment;
   }
 
+//file export................................
   Future<void> exportDB() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-    ].request();
+    showDialog(
+      context: context,
+      builder: (context) {
+        bool exporting = false;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text(
+              "Are you sure you want to export?",
+              style: TextStyle(fontSize: 18),
+            ),
+            content: exporting
+                ? const Center(
+                    heightFactor: 2,
+                    child: CircularProgressIndicator(),
+                  )
+                : null,
+            actions: [
+              ElevatedButton(
+                onPressed: exporting
+                    ? null
+                    : () async {
+                        Map<Permission, PermissionStatus> statuses = await [
+                          Permission.storage,
+                        ].request();
 
-    if (statuses[Permission.storage]!.isGranted) {
-     File output =  await sqLdb.exportDB();
-      if (output.existsSync()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Export successfully!, Check in Download folder!")));
-
-
-        Share.shareFiles([output.path]);
-
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Export failed!")));
-      }
-    }else{
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Permission denied!")));}
+                        if (statuses[Permission.storage]!.isGranted) {
+                          setState(() {
+                            exporting = true;
+                          });
+                          String filePath = await sqLdb.exportDB();
+                          setState(() {
+                            exporting = false;
+                          });
+                          if (filePath != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    "Export successful! Check in Download folder!"),
+                              ),
+                            );
+                            Share.shareFiles([filePath]);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Export failed!"),
+                              ),
+                            );
+                          }
+                          Navigator.of(context).pop();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Permission denied!"),
+                            ),
+                          );
+                        }
+                      },
+                child: const Text("Ok"),
+              ),
+              ElevatedButton(
+                onPressed: exporting
+                    ? null
+                    : () {
+                        Navigator.of(context).pop();
+                      },
+                child: const Text("Cancel"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
+//file import................................
   Future<void> importDB() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-    ].request();
+    showDialog(
+        context: context,
+        builder: (context) {
+          bool imporing = false;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              title: const Text(
+                "Are you sure you want to import?",
+                style: TextStyle(fontSize: 18),
+              ),
+              content: imporing
+                  ? const Center(
+                      heightFactor: 2,
+                      child: CircularProgressIndicator(),
+                    )
+                  : null,
+              actions: [
+                ElevatedButton(
+                  onPressed: imporing
+                      ? null
+                      : () async {
+                          setState(() {
+                            imporing = true;
+                          });
+                          FilePickerResult? result =
+                              await FilePicker.platform.pickFiles(
+                            type: FileType.any,
+                          );
+                          if (result != null) {
+                            File file = File(result.files.single.path!);
+                            if (await sqLdb.importDB(file)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Import successful!"),
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) => const Home()),
+                                (route) => false,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Import failed!"),
+                                ),
+                              );
+                            }
+                          }
+                          setState(() {
+                            imporing = false;
+                          });
+                        },
+                  child: const Text("Ok"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Cancel"),
+                ),
+              ],
+            ),
+          );
+        });
 
-    if (statuses[Permission.storage]!.isGranted) {
-      // pick file
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.any);
-      if (result != null) {
-        File file = File(result.files.single.path!);
+    // Map<Permission, PermissionStatus> statuses = await [
+    //   Permission.storage,
+    // ].request();
 
-        if (await sqLdb.importDB(file)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Import successfully!")));
+    // if (statuses[Permission.storage]!.isGranted) {
+    //   // pick file
+    //   FilePickerResult? result =
+    //       await FilePicker.platform.pickFiles(type: FileType.any);
+    //   if (result != null) {
+    //     File file = File(result.files.single.path!);
 
-          // app restart
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const Home()),
-              (route) => false);
-        } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text("Import failed!")));
-        }
-      }
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Permission denied!")));
-    }
+    //     if (await sqLdb.importDB(file)) {
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //           const SnackBar(content: Text("Import successfully!")));
+
+    //       // app restart
+    //       Navigator.of(context).pushAndRemoveUntil(
+    //           MaterialPageRoute(builder: (context) => const Home()),
+    //           (route) => false);
+    //     } else {
+    //       ScaffoldMessenger.of(context)
+    //           .showSnackBar(const SnackBar(content: Text("Import failed!")));
+    //     }
+    //   }
+    // } else {
+    //   ScaffoldMessenger.of(context)
+    //       .showSnackBar(const SnackBar(content: Text("Permission denied!")));
+    // }
   }
 
+//file backup ................................
   Future<void> backupDB() async {
     showDialog(
         context: context,
@@ -110,6 +233,7 @@ class _HomeState extends State<Home> {
             ));
   }
 
+//file restore ................................
   Future<void> restoreDB() async {
     showDialog(
         context: context,

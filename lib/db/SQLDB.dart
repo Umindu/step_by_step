@@ -189,7 +189,6 @@ class SQLdb {
 
           //get sub folder name
           String ourSubFolderName = ourFileName.split("_")[0];
-          print(ourSubFolderName+ "=====================");
 
           //create sub folder
           Directory ourSubFolder = Directory(
@@ -244,7 +243,7 @@ class SQLdb {
       File ourZipFile = File("/storage/emulated/0/Download/StepbyStep.zip");
       await ourZipFile.writeAsBytes(ZipEncoder().encode(archive)!);
 
-      return ourZipFile;
+      return ourZipFile.path;
     } catch (e) {
       print(e);
       return null;
