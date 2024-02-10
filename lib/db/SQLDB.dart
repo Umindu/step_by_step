@@ -184,19 +184,20 @@ class SQLdb {
           await ourFileToWrite.writeAsBytes(ourFile.content);
         } else {
           Directory ourImagesFolder =
-              Directory("/data/user/0/com.example.step_by_step/images");
+              Directory("/data/user/0/com.example.step_by_step/Images");
           await ourImagesFolder.create();
 
           //get sub folder name
           String ourSubFolderName = ourFileName.split("_")[0];
+          print(ourSubFolderName+ "=====================");
 
           //create sub folder
           Directory ourSubFolder = Directory(
-              "/data/user/0/com.example.step_by_step/images/$ourSubFolderName");
+              "/data/user/0/com.example.step_by_step/Images/$ourSubFolderName");
           await ourSubFolder.create();
 
           File ourFileToWrite = File(
-              "/data/user/0/com.example.step_by_step/images/$ourSubFolderName/$ourFileName");
+              "/data/user/0/com.example.step_by_step/Images/$ourSubFolderName/$ourFileName");
           await ourFileToWrite.writeAsBytes(ourFile.content);
         }
       }
@@ -225,7 +226,7 @@ class SQLdb {
 
       //archive the image folder to the compress
       Directory ourImagesFolder =
-          Directory("/data/user/0/com.example.step_by_step/images");
+          Directory("/data/user/0/com.example.step_by_step/Images");
       List<FileSystemEntity> ourImageFiles =
           ourImagesFolder.listSync(recursive: true, followLinks: false);
       ourImageFiles.forEach((element) {
@@ -243,10 +244,10 @@ class SQLdb {
       File ourZipFile = File("/storage/emulated/0/Download/StepbyStep.zip");
       await ourZipFile.writeAsBytes(ZipEncoder().encode(archive)!);
 
-      return true;
+      return ourZipFile;
     } catch (e) {
       print(e);
-      return false;
+      return null;
     }
   }
 

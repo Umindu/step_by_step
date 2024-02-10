@@ -74,14 +74,14 @@ class _AddEditStepState extends State<AddEditStep> {
       // final savedImage = await File(_imageFile!.path).copy(
       //     '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       Directory? folderPathForFile =
-          Directory("/data/user/0/com.example.step_by_step/images");
+          Directory("/data/user/0/com.example.step_by_step/Images");
       await folderPathForFile.create();
       Directory? imgfolderPathForDBFile = Directory(
-          "/data/user/0/com.example.step_by_step/images/${widget.id_exp}");
+          "/data/user/0/com.example.step_by_step/Images/${widget.id_exp}");
       await imgfolderPathForDBFile.create();
 
       final savedImage = await File(_imageFile!.path).copy(
-          '/data/user/0/com.example.step_by_step/images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+          '/data/user/0/com.example.step_by_step/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       setState(() {
         imagePath = savedImage.path;
       });
@@ -110,14 +110,14 @@ class _AddEditStepState extends State<AddEditStep> {
       // final savedImage = await File(_imageFile!.path).copy(
       //     '/storage/emulated/0/StepbyStep/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       Directory? folderPathForFile =
-          Directory("/data/user/0/com.example.step_by_step/images");
+          Directory("/data/user/0/com.example.step_by_step/Images");
       await folderPathForFile.create();
       Directory? imgfolderPathForDBFile = Directory(
-          "/data/user/0/com.example.step_by_step/images/${widget.id_exp}");
+          "/data/user/0/com.example.step_by_step/Images/${widget.id_exp}");
       await imgfolderPathForDBFile.create();
       
       final savedImage = await File(_imageFile!.path).copy(
-          '/data/user/0/com.example.step_by_step/images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
+          '/data/user/0/com.example.step_by_step/Images/${widget.id_exp}/${widget.id_exp.toString() + "_" + fileName}');
       setState(() {
         imagePath = savedImage.path;
       });
@@ -358,7 +358,7 @@ class _AddEditStepState extends State<AddEditStep> {
                       width: MediaQuery.of(context).size.width,
                       child: imagePath == null
                           ? const Center(child: Text("No image"))
-                          : Image.file(File(imagePath!)),
+                          : Image.file(File(imagePath!), fit: BoxFit.cover),
                     ),
             ],
           ),

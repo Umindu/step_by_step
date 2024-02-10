@@ -96,8 +96,8 @@ class _ShowStepDetailsState extends State<ShowStepDetails> {
                 height: null,
                 width: MediaQuery.of(context).size.width,
                 child: base64String == null
-                    ? Center(child: const Text("No image"))
-                    : Image.file(File(base64String!)),
+                    ? const Center(child: Text("No image"))
+                    : Image.file(File(base64String!), fit: BoxFit.cover),
               ),
             ],
           ),
